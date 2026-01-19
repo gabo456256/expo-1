@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Expo: El Piano Viejo - Gabriel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Special+Elite&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-blue: #00d2ff;
+            --sepia: #f4ecd8;
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            background: #000;
+            color: white;
+            font-family: 'Special Elite', serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Capas de Fondo */
+        .stage {
+            position: fixed; inset: 0;
+            display: none; flex-direction: column;
+            justify-content: center; align-items: center;
+            transition: opacity 1s ease;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .overlay {
+            position: absolute; inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1;
+        }
+
+        /* Animación inicial de impacto */
+        .impact-text {
+            font-family: 'Cinzel', serif;
+            font-size: 5rem;
+            text-align: center;
+            color: var(--neon-blue);
+            text-shadow: 0 0 20px var(--neon-blue);
+            animation: glitch 0.2s infinite alternate;
+        }
+
+        /* Cuadros de Texto Estilo Realismo Mágico */
+        .content-box {
+            position: relative;
+            z-index: 10;
+            width: 70%;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 30px;
+            border-left: 5px solid var(--neon-blue);
+            box-shadow: 10px 10px 0px rgba(0, 210, 255, 0.3);
+            max-width: 900px;
+        }
+
+        h2 { font-family: 'Cinzel'; color: var(--neon-blue); margin-top: 0; }
+
+        /* Animación del Piano (Fase Final) */
+        .piano-container {
+            position: absolute;
+            bottom: 10%; width: 100%;
+            display: flex; justify-content: center;
+            z-index: 5;
+        }
+
+        .piano {
+            width: 300px;
+            transition: all 1.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        .piano-out { transform: translateX(-200%) rotate(-45deg); opacity: 0; }
+        .piano-in { transform: scale(1.2); filter: drop-shadow(0 0 20px gold); }
+
+        /* Navegación */
+        #nav-btn {
+            position: fixed; bottom: 40px; right: 40px;
+            z-index: 1000; padding: 15px 30px;
+            background: var(--neon-blue); border: none;
+            font-family: 'Cinzel'; cursor: pointer;
+            font-weight: bold; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0% 100%);
+        }
+
+        @keyframes glitch {
+            from { transform: skew(2deg); }
+            to { transform: skew(-2deg); }
+        }
+    </style>
+</head>
+<body>
+
+<audio id="bgMusic" loop>
+    <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3" type="audio/mpeg">
+</audio>
+
+<div id="fase0" class="stage" style="display: flex; background: #050505;">
+    <div class="impact-text">EX PO DE GABRIEL<br>EMPECEMOS</div>
+    <p style="margin-top: 20px; font-size: 1.5rem;">HECHO POR GABITO 😎</p>
+    <button onclick="iniciar()" style="margin-top: 40px; padding: 15px 40px; cursor:pointer;">CARGAR DATA</button>
+</div>
+
+<div id="fase1" class="stage" style="background-image: url('autor.jpg');">
+    <div class="overlay"></div>
+    <div class="content-box">
+        <h2 id="t1">¿Quién es Arturo Uslar Pietri?</h2>
+        <p id="p1"></p>
+    </div>
+</div>
+
+<div id="fase2" class="stage" style="background-image: url('hermanas.jpg');">
+    <div class="overlay"></div>
+    <div class="content-box">
+        <h2 id="t2">Resumen de la obra</h2>
+        <p id="p2"></p>
+    </div>
+</div>
+
+<div id="fase5" class="stage" style="background-image: url('habitacion.jpg');">
+    <div class="overlay"></div>
+    <div class="content-box" style="margin-bottom: 300px;">
+        <h2 id="t5">Grado de Comprensión</h2>
+        <p id="p5"></p>
+    </div>
+    <div class="piano-container">
+        <img id="pianoViejo" src="piano_viejo.png" class="piano" alt="Piano Viejo">
+        <img id="pianoNuevo" src="piano_nuevo.png" class="piano" style="display:none; position:absolute;" alt="Piano Nuevo">
+    </div>
+</div>
+
+<div id="fase6" class="stage">
+    <div class="content-box" style="text-align: center;">
+        <h2 class="impact-text" style="font-size: 3rem;">FIN DE LA TRANSMISIÓN</h2>
+        <p>¿Qué calificación le das a Gabriel?</p>
+        <div id="votos"></div>
+        <h1 id="total"></h1>
+    </div>
+</div>
+
+<button id="nav-btn" onclick="nextSlide()" style="display:none;">SIGUIENTE >></button>
+
+<script>
+    let current = 0;
+    const music = document.getElementById('bgMusic');
+
+    const data = [
+        {}, // fase 0
+        { t: "¿Quién es Arturo Uslar Pietri?", p: "Caraqueño brillante (1906-2001). Fue quien introdujo el término Realismo Mágico. Su libro 'Red' cambió la literatura venezolana en 1936." },
+        { t: "La Casona y el Piano", p: "Luisita y Angélica son fantasmas en su propia casa. El piano, herido de muerte y lleno de polillas, ya no hace música, solo ruidos secos." },
+        { t: "Temática: La Decadencia", p: "El paso de la Venezuela aristocrática a la petrolera. El piano representa a una clase social que se aferra a un pasado que ya no existe." },
+        { t: "Análisis: Personificación", p: "El piano sufre y muere como un ser humano. Las polillas son el tiempo devorando lo que fuimos. Vivir de nostalgia es peligroso." },
+        { t: "Lección de Desapego", p: "Hay que soltar lo que ya no sirve. Si nos quedamos pegados en el 'antes', nos llenamos de polvo y amargura. ¡Vivan el hoy!" }
+    ];
+
+    function iniciar() {
+        music.play();
+        music.volume = 0.3;
+        nextSlide();
+    }
+
+    function type(id, text) {
+        let i = 0;
+        const el = document.getElementById(id);
+        el.innerHTML = "";
+        const timer = setInterval(() => {
+            el.innerHTML += text.charAt(i);
+            i++;
+            if(i >= text.length) clearInterval(timer);
+        }, 30);
+    }
+
+    function nextSlide() {
+        document.querySelectorAll('.stage').forEach(s => s.style.display = 'none');
+        current++;
+        
+        const stage = document.getElementById('fase' + (current > 5 ? 6 : (current > 1 ? (current === 5 ? 5 : 2) : 1))); 
+        // Simplificación para el demo, en tu código real puedes hacer una para cada fase
+        
+        if (current <= 5) {
+            const s = document.getElementById('fase' + (current === 5 ? 5 : (current === 1 ? 1 : 2)));
+            s.style.display = 'flex';
+            document.getElementById('nav-btn').style.display = 'block';
+            type('p' + (current === 5 ? 5 : (current === 1 ? 1 : 2)), data[current].p);
+            
+            if(current === 5) {
+                setTimeout(() => {
+                    document.getElementById('pianoViejo').classList.add('piano-out');
+                    setTimeout(() => {
+                        const pn = document.getElementById('pianoNuevo');
+                        pn.style.display = 'block';
+                        pn.classList.add('piano-in');
+                    }, 1000);
+                }, 3000);
+            }
+        } else {
+            document.getElementById('fase6').style.display = 'flex';
+            document.getElementById('nav-btn').style.display = 'none';
+            setupRating();
+        }
+    }
+
+    function setupRating() {
+        const v = document.getElementById('votos');
+        for(let i=1; i<=10; i++) {
+            v.innerHTML += `<button onclick="votar(${i})" style="padding:10px; margin:5px; background:var(--neon-blue); cursor:pointer;">${i}</button>`;
+        }
+    }
+
+    function votar(n) {
+        document.getElementById('total').innerHTML = n >= 9 ? "¡GRACIAS POR EL 10/10! 🎹🔥" : "SISTEMA: RECIBIDO " + n + "/10";
+    }
+</script>
+
+</body>
+</html>
